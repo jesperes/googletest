@@ -105,8 +105,8 @@ FilePath FilePath::GetCurrentDir() {
   char cwd[GTEST_PATH_MAX_ + 1] = { '\0' };
   return FilePath(_getcwd(cwd, sizeof(cwd)) == NULL ? "" : cwd);
 #elif GTEST_OS_IAR
-  // No dir ops on IAR/DLib
-  return FilePath("");
+  // No dir ops on IAR/DLib. Assume that "current dir" is always ".".
+  return FilePath(".");
 #else
   char cwd[GTEST_PATH_MAX_ + 1] = { '\0' };
   char* result = getcwd(cwd, sizeof(cwd));
