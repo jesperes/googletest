@@ -108,6 +108,8 @@
 # include <windows.h>  // NOLINT
 # undef min
 
+#elif GTEST_OS_IAR
+//
 #else
 
 // Assume other platforms have gettimeofday().
@@ -848,6 +850,9 @@ TimeInMillis GetTimeInMillis() {
   struct timeval now;
   gettimeofday(&now, NULL);
   return static_cast<TimeInMillis>(now.tv_sec) * 1000 + now.tv_usec / 1000;
+#elif GTEST_OS_IAR
+  // TODO
+  return 0;
 #else
 # error "Don't know how to get the current time on your system."
 #endif
@@ -3600,6 +3605,8 @@ static bool PortableLocaltime(time_t seconds, struct tm* out) {
     return false;
   *out = *tm_ptr;
   return true;
+#elif GTEST_OS_IAR
+  return false;
 #else
   return localtime_r(&seconds, out) != NULL;
 #endif

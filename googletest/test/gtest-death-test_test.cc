@@ -1371,6 +1371,9 @@ TEST(ConditionalDeathMacrosTest, AssertDeatDoesNotReturnhIfUnsupported) {
 
 #endif  // !GTEST_HAS_DEATH_TEST
 
+// IAR DLib does not have _exit(1), so this code does not compile at the moment
+#ifndef GTEST_OS_IAR
+
 // Tests that the death test macros expand to code which may or may not
 // be followed by operator<<, and that in either case the complete text
 // comprises only a single C++ statement.
@@ -1421,3 +1424,5 @@ TEST(ConditionalDeathMacrosSyntaxDeathTest, SwitchStatement) {
 TEST(NotADeathTest, Test) {
   SUCCEED();
 }
+
+#endif

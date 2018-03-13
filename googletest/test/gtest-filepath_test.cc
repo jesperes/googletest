@@ -73,6 +73,9 @@ int _rmdir(const char* path) {
 
 #else
 
+// No dir operations on IAR/DLib
+#ifndef GTEST_OS_IAR
+
 TEST(GetCurrentDirTest, ReturnsCurrentDir) {
   const FilePath original_dir = FilePath::GetCurrentDir();
   EXPECT_FALSE(original_dir.IsEmpty());
@@ -94,6 +97,7 @@ TEST(GetCurrentDirTest, ReturnsCurrentDir) {
 
 # endif
 }
+#endif
 
 #endif  // GTEST_OS_WINDOWS_MOBILE
 
@@ -478,6 +482,8 @@ TEST(AssignmentOperatorTest, ConstAssignedToNonConst) {
   EXPECT_EQ("const_path", non_default_path.string());
 }
 
+#ifndef GTEST_OS_IAR
+
 class DirectoryCreationTest : public Test {
  protected:
   virtual void SetUp() {
@@ -558,6 +564,7 @@ TEST_F(DirectoryCreationTest, CreateDirectoriesFail) {
   EXPECT_FALSE(testdata_file_.DirectoryExists());
   EXPECT_FALSE(testdata_file_.CreateDirectoriesRecursively());
 }
+#endif
 
 TEST(NoDirectoryCreationTest, CreateNoDirectoriesForDefaultXmlFile) {
   const FilePath test_detail_xml("test_detail.xml");

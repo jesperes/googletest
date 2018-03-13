@@ -145,6 +145,7 @@
 //     GTEST_OS_WINDOWS_PHONE    - Windows Phone
 //     GTEST_OS_WINDOWS_RT       - Windows Store App/WinRT
 //   GTEST_OS_ZOS      - z/OS
+//   GTEST_OS_IAR      - IAR Systems (DLib)
 //
 // Among the platforms, Cygwin, Linux, Max OS X, and Windows have the
 // most stable support.  Since core members of the Google Test project
@@ -267,7 +268,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef _WIN32_WCE
+#if !defined(_WIN32_WCE) && !defined(__IAR_SYSTEMS_ICC__)
 # include <sys/types.h>
 # include <sys/stat.h>
 #endif  // !_WIN32_WCE
@@ -418,6 +419,8 @@ typedef struct _CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 // WindowsTypesTest.CRITICAL_SECTIONIs_RTL_CRITICAL_SECTION.
 typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 #endif
+#elif GTEST_OS_IAR
+// No unistd.h here
 #else
 // This assumes that non-Windows OSes provide unistd.h. For OSes where this
 // is not the case, we need to include headers that provide the functions
@@ -433,7 +436,10 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 
 // Defines this to true iff Google Test can use POSIX regular expressions.
 #ifndef GTEST_HAS_POSIX_RE
-# if GTEST_OS_LINUX_ANDROID
+# if GTEST_OS_IAR
+// No POSIX regex with IAR
+# define GTEST_HAS_POSIX_RE 0
+# elif GTEST_OS_LINUX_ANDROID
 // On Android, <regex.h> is only available starting with Gingerbread.
 #  define GTEST_HAS_POSIX_RE (__ANDROID_API__ >= 9)
 # else
@@ -805,7 +811,7 @@ using ::std::tuple_size;
 // By default, we assume that stream redirection is supported on all
 // platforms except known mobile ones.
 # if GTEST_OS_WINDOWS_MOBILE || GTEST_OS_SYMBIAN || \
-    GTEST_OS_WINDOWS_PHONE || GTEST_OS_WINDOWS_RT
+    GTEST_OS_WINDOWS_PHONE || GTEST_OS_WINDOWS_RT || GTEST_OS_IAR
 #  define GTEST_HAS_STREAM_REDIRECTION 0
 # else
 #  define GTEST_HAS_STREAM_REDIRECTION 1
@@ -2462,6 +2468,23 @@ inline bool IsDir(const StatStruct& st) {
 }
 # endif  // GTEST_OS_WINDOWS_MOBILE
 
+#elif __IAR_SYSTEMS_ICC__
+
+typedef struct stat StatStruct;
+
+inline int FileNo(FILE *file) { return fileno(file); }
+inline int IsATTY(int fd) { return 0; }
+inline int StrCaseCmp(const char* s1, const char* s2) {
+  return strcasecmp(s1, s2);
+}
+inline char* StrDup(const char* src) { return strdup(src); }
+
+// IAR DLib does not have stuff from unistd.h
+// inline int Stat(const char* path, StatStruct* buf) { return stat(path, buf); }
+// inline int RmDir(const char* dir) { return rmdir(dir); }
+// inline bool IsDir(const StatStruct& st) { return S_ISDIR(st.st_mode); }
+
+
 #else
 
 typedef struct stat StatStruct;
@@ -2490,7 +2513,7 @@ inline const char* StrNCpy(char* dest, const char* src, size_t n) {
 // StrError() aren't needed on Windows CE at this time and thus not
 // defined there.
 
-#if !GTEST_OS_WINDOWS_MOBILE && !GTEST_OS_WINDOWS_PHONE && !GTEST_OS_WINDOWS_RT
+#if !GTEST_OS_WINDOWS_MOBILE && !GTEST_OS_WINDOWS_PHONE && !GTEST_OS_WINDOWS_RT && !GTEST_OS_IAR
 inline int ChDir(const char* dir) { return chdir(dir); }
 #endif
 inline FILE* FOpen(const char* path, const char* mode) {
@@ -2503,7 +2526,7 @@ inline FILE *FReopen(const char* path, const char* mode, FILE* stream) {
 inline FILE* FDOpen(int fd, const char* mode) { return fdopen(fd, mode); }
 #endif
 inline int FClose(FILE* fp) { return fclose(fp); }
-#if !GTEST_OS_WINDOWS_MOBILE
+#if !GTEST_OS_WINDOWS_MOBILE && !GTEST_OS_IAR
 inline int Read(int fd, void* buf, unsigned int count) {
   return static_cast<int>(read(fd, buf, count));
 }

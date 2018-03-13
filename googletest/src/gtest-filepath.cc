@@ -54,6 +54,8 @@
 # define GTEST_PATH_MAX_ PATH_MAX
 #elif defined(_XOPEN_PATH_MAX)
 # define GTEST_PATH_MAX_ _XOPEN_PATH_MAX
+#elif defined GTEST_OS_IAR
+# define GTEST_PATH_MAX_ 256 // TODO not sure about this
 #else
 # define GTEST_PATH_MAX_ _POSIX_PATH_MAX
 #endif  // GTEST_OS_WINDOWS
@@ -102,6 +104,9 @@ FilePath FilePath::GetCurrentDir() {
 #elif GTEST_OS_WINDOWS
   char cwd[GTEST_PATH_MAX_ + 1] = { '\0' };
   return FilePath(_getcwd(cwd, sizeof(cwd)) == NULL ? "" : cwd);
+#elif GTEST_OS_IAR
+  // No dir ops on IAR/DLib
+  return FilePath("");
 #else
   char cwd[GTEST_PATH_MAX_ + 1] = { '\0' };
   char* result = getcwd(cwd, sizeof(cwd));
@@ -210,6 +215,9 @@ bool FilePath::FileOrDirectoryExists() const {
   const DWORD attributes = GetFileAttributes(unicode);
   delete [] unicode;
   return attributes != kInvalidFileAttributes;
+#elif GTEST_OS_IAR
+  // hm?
+  return true;
 #else
   posix::StatStruct file_stat;
   return posix::Stat(pathname_.c_str(), &file_stat) == 0;
@@ -225,10 +233,14 @@ bool FilePath::DirectoryExists() const {
   // Windows (like "C:\\").
   const FilePath& path(IsRootDirectory() ? *this :
                                            RemoveTrailingPathSeparator());
+#elif GTEST_OS_IAR
+  // hm?
+  return true;
 #else
   const FilePath& path(*this);
 #endif
 
+#ifndef GTEST_OS_IAR
 #if GTEST_OS_WINDOWS_MOBILE
   LPCWSTR unicode = String::AnsiToUtf16(path.c_str());
   const DWORD attributes = GetFileAttributes(unicode);
@@ -244,6 +256,7 @@ bool FilePath::DirectoryExists() const {
 #endif  // GTEST_OS_WINDOWS_MOBILE
 
   return result;
+#endif
 }
 
 // Returns true if pathname describes a root directory. (Windows has one
@@ -321,6 +334,11 @@ bool FilePath::CreateDirectoriesRecursively() const {
 // directory for any reason, including if the parent directory does not
 // exist. Not named "CreateDirectory" because that's a macro on Windows.
 bool FilePath::CreateFolder() const {
+#ifdef GTEST_OS_IAR
+  // IAR/DLib does not support directories, so we can't do anything here
+  // but fake an "ok".
+  return true;
+#else
 #if GTEST_OS_WINDOWS_MOBILE
   FilePath removed_sep(this->RemoveTrailingPathSeparator());
   LPCWSTR unicode = String::AnsiToUtf16(removed_sep.c_str());
@@ -336,6 +354,7 @@ bool FilePath::CreateFolder() const {
     return this->DirectoryExists();  // An error is OK if the directory exists.
   }
   return true;  // No error.
+#endif
 }
 
 // If input name has a trailing separator character, remove it and return the

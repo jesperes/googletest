@@ -42,6 +42,8 @@
 # include <io.h>
 # include <sys/stat.h>
 # include <map>  // Used in ThreadLocal.
+#elif GTEST_OS_IAR
+// ???
 #else
 # include <unistd.h>
 #endif  // GTEST_OS_WINDOWS
@@ -74,6 +76,9 @@ namespace internal {
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 // MSVC and C++Builder do not provide a definition of STDERR_FILENO.
+const int kStdOutFileno = 1;
+const int kStdErrFileno = 2;
+#elif defined(GTEST_OS_IAR)
 const int kStdOutFileno = 1;
 const int kStdErrFileno = 2;
 #else
