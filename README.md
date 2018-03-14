@@ -1,3 +1,7 @@
+# IAR Support #
+
+This is a fork of Google Test which supports compilers from IAR
+Systems.
 
 # Google Test #
 
