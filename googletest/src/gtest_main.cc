@@ -33,6 +33,15 @@
 
 GTEST_API_ int main(int argc, char **argv) {
   printf("Running main() from gtest_main.cc\n");
-  testing::InitGoogleTest(&argc, argv);
+
+  char *my_argv[] = {
+		  "main.out",
+		  "--gtest_output=xml:JUNIT.xml",
+		  NULL
+  };
+
+  argc = 2;
+
+  testing::InitGoogleTest(&argc, (char **)my_argv);
   return RUN_ALL_TESTS();
 }
